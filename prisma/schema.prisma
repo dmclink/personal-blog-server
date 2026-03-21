@@ -17,10 +17,11 @@ model User {
   email String @unique
   username String @unique
   can_post Boolean @default(false)
+  admin Boolean @default(false)
   posts Post[]
   comments Comment[]
   email_verified Boolean @default(false)
-  pfp_url String // going to randomly pick one of a few options on user creation if not supplied
+  pfp_url String // must randomly pick one of a few options on user creation if not supplied so this is still required
 }
 
 model Post {
