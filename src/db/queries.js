@@ -1,0 +1,100 @@
+const { prisma } = require('../../prisma_lib/prisma.js');
+
+const { hashPassword } = require('../lib/authutils.js');
+
+async function getUsers() {
+	try {
+		const users = await prisma.user.findMany();
+		return users;
+	} catch (err) {
+		console.error(err);
+		throw err;
+	}
+}
+
+async function getUserById(id) {
+	try {
+		const user = await prisma.user.findUnique({ where: { id } });
+		if (!user) {
+			const err = new Error('no user exists by id:', id);
+			console.error(err);
+			throw err;
+		}
+		return user;
+	} catch (err) {
+		console.error(err);
+		throw err;
+	}
+}
+
+async function usernameExists(username) {
+	try {
+		const user = await prisma.user.findFirst({ where: { username } });
+
+		return user !== null;
+	} catch (err) {
+		console.error(err);
+		throw err;
+	}
+}
+
+async function getUserByUsername(username) {
+	try {
+		const user = await prisma.user.findFirst({ where: { username } });
+		if (typeof user === 'undefined') {
+			console.error(err);
+			throw err;
+		}
+
+		return user;
+	} catch (err) {
+		console.error(err);
+		throw err;
+	}
+}
+
+async function emailExists(email) {
+	try {
+		const user = await prisma.user.findFirst({ where: { email } });
+
+		return user !== null;
+	} catch (err) {
+		console.error(err);
+		throw err;
+	}
+}
+
+function randomDefaultPfpUrl() {
+	const num = Math.round(Math.random() * 4);
+	return `default_pfp${num}`;
+}
+
+async function addUser(email, username, password) {
+	const hashedPassword = await hashPassword(password);
+	const pfpUrl = randomDefaultPfpUrl();
+	try {
+		const user = await prisma.user.create({
+			data: {
+				email,
+				username,
+				hashed_password: hashedPassword,
+				pfp_url: pfpUrl,
+			},
+		});
+
+		return user;
+	} catch (error) {
+		console.error(err);
+		throw err;
+	}
+}
+
+module.exports = {
+	getUsers,
+	getUserById,
+	getUserByUsername,
+	usernameExists,
+	emailExists,
+	addUser,
+	getUserByUsername,
+};
