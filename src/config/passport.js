@@ -13,7 +13,6 @@ const opts = {
 };
 
 const verifyCallback = async (jwt_payload, done) => {
-	console.log('JWT_PAYLOAD:', jwt_payload);
 	try {
 		const user = await prisma.user.findUnique({ where: { id: jwt_payload.sub } });
 		if (!user) {

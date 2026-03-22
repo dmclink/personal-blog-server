@@ -5,15 +5,29 @@ const router = express.Router();
 const passport = require('../config/passport.js');
 const nodemailer = require('../config/nodemailer.js');
 
-const { addUser, emailExists, usernameExists, getUsers, userEmailVerified } = require('../db/queries.js');
+const { addUser, emailExists, usernameExists, userEmailVerified, getUserByUsername } = require('../db/queries.js');
 const { verifyPassword, buildUserAuthToken } = require('../lib/authutils.js');
 
 router.post('/login', async (req, res) => {
 	const username = req.body.username;
 	const password = req.body.password;
 
+	if (!username || !password) {
+		res.json({ success: false, error: { message: 'missing username or password' } });
+		return;
+	}
+
 	try {
-		const user = await db.getUserByUsername(username);
+		const user = await getUserByUsername(username);
+		if (!user) {
+			throw new Error('no username exists:', username);
+		}
+
+		const verified = await verifyPassword(user.id, password);
+		if (!verified) {
+			throw new Error('incorrect password:', password);
+		}
+
 		const token = buildUserAuthToken(user);
 
 		res.json({
@@ -27,7 +41,6 @@ router.post('/login', async (req, res) => {
 });
 
 router.get('/protected', passport.authenticate('jwt', { session: false }), (req, res) => {
-	console.log('REQ.USER:', req.user);
 	res.send({ success: true, message: "cool, you're authenticated, nice\n" });
 });
 
@@ -40,7 +53,6 @@ router.post('/register', async (req, res) => {
 		res.json({ success: false, error: { message: 'hey you didnt fill out all the data, try again\n' } });
 		return;
 	}
-	const users = await getUsers();
 
 	if (await usernameExists(username)) {
 		res.json({ success: false, error: { message: 'that username already exists, pick another one\n' } });

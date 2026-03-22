@@ -1,5 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { prisma } = require('../../prisma_lib/prisma.js');
+const { logger } = require('../config/nodemailer.js');
 
 const SALT_ROUNDS = 10;
 
@@ -24,14 +26,13 @@ async function passwordMatches(password, storedHash) {
 	}
 }
 
-async function verifyPassword(user, password) {
+async function verifyPassword(userId, password) {
 	try {
-		if (!user || !user.id) {
-			throw new Error('cannot pass an empty user to this funtion, user:', user);
+		if (!userId) {
+			throw new Error('cannot pass an empty user id to this funtion, user:', userId);
 		}
-		const userId = user.id;
 
-		const user = prisma.user.findUnique({ where: { id: userId } });
+		const user = await prisma.user.findUnique({ where: { id: userId } });
 		if (!user) {
 			const err = new Error('user does not exist with id:', userId);
 			throw err;
