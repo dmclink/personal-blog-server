@@ -7,7 +7,6 @@ async function getUsers() {
 		const users = await prisma.user.findMany();
 		return users;
 	} catch (err) {
-		console.error(err);
 		throw err;
 	}
 }
@@ -22,7 +21,6 @@ async function getUserById(id) {
 		}
 		return user;
 	} catch (err) {
-		console.error(err);
 		throw err;
 	}
 }
@@ -33,7 +31,6 @@ async function usernameExists(username) {
 
 		return user !== null;
 	} catch (err) {
-		console.error(err);
 		throw err;
 	}
 }
@@ -48,7 +45,6 @@ async function getUserByUsername(username) {
 
 		return user;
 	} catch (err) {
-		console.error(err);
 		throw err;
 	}
 }
@@ -59,7 +55,6 @@ async function emailExists(email) {
 
 		return user !== null;
 	} catch (err) {
-		console.error(err);
 		throw err;
 	}
 }
@@ -84,7 +79,6 @@ async function addUser(email, username, password) {
 
 		return user;
 	} catch (error) {
-		console.error(err);
 		throw err;
 	}
 }
@@ -98,7 +92,40 @@ async function userEmailVerified(id, email) {
 		const updatedUser = await prisma.user.update({ where: { id, email }, data: { email_verified: true } });
 		console.log('user email verification confirmed: ', updatedUser);
 	} catch (err) {
-		console.error(err);
+		throw err;
+	}
+}
+
+async function getAllPublishedPosts() {
+	try {
+		const posts = await prisma.post.findMany({ where: { published_at: { not: null } } });
+		return posts;
+	} catch (err) {
+		throw err;
+	}
+}
+
+async function addNewPost(postData) {
+	try {
+		const post = await prisma.post.create({
+			data: {
+				title: postData.title,
+				content: postData.content,
+				published_at: postData.published_at,
+				author: { connect: { id: postData.author_id } },
+			},
+		});
+		return post;
+	} catch (err) {
+		throw err;
+	}
+}
+
+async function upgradeUserPostPrivilege(userId) {
+	try {
+		const user = await prisma.user.update({ where: { id: userId }, data: { can_post: true } });
+		return user;
+	} catch (err) {
 		throw err;
 	}
 }
@@ -112,4 +139,7 @@ module.exports = {
 	addUser,
 	getUserByUsername,
 	userEmailVerified,
+	getAllPublishedPosts,
+	addNewPost,
+	upgradeUserPostPrivilege,
 };

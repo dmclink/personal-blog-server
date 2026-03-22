@@ -80,7 +80,7 @@ router.get('/verify-email', passport.authenticate('jwt', { session: false }), (r
 	const userId = user.id;
 
 	const payload = {
-		user_id: user.id,
+		user_id: userId,
 		email: userEmail,
 		iss: 'https://www.github.com/dmclink/personal-blog-server',
 		aud: 'personal-blog-user',
