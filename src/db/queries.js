@@ -89,6 +89,20 @@ async function addUser(email, username, password) {
 	}
 }
 
+async function userEmailVerified(id, email) {
+	try {
+		const user = await prisma.user.findUnique({ where: { id, email } });
+		if (!user) {
+			throw new Error('user not found with id and email:', id, email);
+		}
+		const updatedUser = await prisma.user.update({ where: { id, email }, data: { email_verified: true } });
+		console.log('user email verification confirmed: ', updatedUser);
+	} catch (err) {
+		console.error(err);
+		throw err;
+	}
+}
+
 module.exports = {
 	getUsers,
 	getUserById,
@@ -97,4 +111,5 @@ module.exports = {
 	emailExists,
 	addUser,
 	getUserByUsername,
+	userEmailVerified,
 };
