@@ -16,12 +16,13 @@ model User {
   id Int @id @default(autoincrement())
   email String @unique
   username String @unique
+  hashed_password String
   can_post Boolean @default(false)
   admin Boolean @default(false)
   posts Post[]
   comments Comment[]
   email_verified Boolean @default(false)
-  pfp_url String // must randomly pick one of a few options on user creation if not supplied so this is still required
+  pfp_url String
 }
 
 model Post {
