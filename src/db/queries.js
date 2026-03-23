@@ -177,6 +177,15 @@ async function deletePost(postId) {
 	}
 }
 
+async function getUserDrafts(userId) {
+	try {
+		const drafts = await prisma.post.findMany({ where: { authorId: userId, published_at: null } });
+		return drafts;
+	} catch (err) {
+		throw err;
+	}
+}
+
 module.exports = {
 	getUsers,
 	getUserById,
@@ -193,4 +202,5 @@ module.exports = {
 	publishPost,
 	editPost,
 	deletePost,
+	getUserDrafts,
 };

@@ -10,6 +10,7 @@ const {
 	publishPost,
 	editPost,
 	deletePost,
+	getUserDrafts,
 } = require('../db/queries.js');
 
 router.get('/', passport.authenticate('jwt', { session: false }), async (req, res) => {
@@ -163,6 +164,17 @@ router.post(
 	},
 );
 
-//TODO: add endpoint to get user drafts (published_at === null)
+router.get('/drafts', passport.authenticate('jwt', { session: false }), canPost, async (req, res, next) => {
+	const userId = req.user.id;
+
+	try {
+		const drafts = await getUserDrafts(userId);
+
+		res.json({ success: true, data: { drafts } });
+	} catch (err) {
+		console.error(err);
+		next(new Error('something went wrong getting user drafts'));
+	}
+});
 
 module.exports = router;
