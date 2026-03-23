@@ -55,6 +55,7 @@ router.post(
 		const shouldPublish = req.query.publish;
 		const title = req.body.title;
 		const content = req.body.content;
+		const description = req.body.description;
 		const authorId = req.user.id;
 
 		if (!title || !content) {
@@ -70,6 +71,7 @@ router.post(
 		const newPost = await addNewPost({
 			title,
 			content,
+			description,
 			author_id: authorId,
 			published_at: shouldPublish ? new Date() : null,
 		});
@@ -118,22 +120,25 @@ router.post(
 		const postId = req.body.post_id;
 		const title = req.body.title;
 		const content = req.body.content;
+		const description = req.body.description;
 
 		if (!postId) {
 			res.json({ success: false, error: { message: 'missing post id' } });
 			return;
 		}
 
-		if (!title && !content) {
+		if (!title && !content && !description) {
 			res.json({
 				success: false,
-				error: { message: 'missing update information, must include either new title or content' },
+				error: {
+					message: 'missing update information, must include either new title, content, or description',
+				},
 			});
 			return;
 		}
 
 		try {
-			await editPost(postId, title, content);
+			await editPost(postId, title, content, description);
 			res.json({ success: true, message: 'post updated' });
 		} catch (err) {
 			console.error(err);

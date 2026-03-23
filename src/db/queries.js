@@ -115,11 +115,13 @@ async function addNewPost(postData) {
 		const post = await prisma.post.create({
 			data: {
 				title: postData.title,
+				description: postData.description,
 				content: postData.content,
 				published_at: postData.published_at,
 				author: { connect: { id: postData.author_id } },
 			},
 		});
+
 		return post;
 	} catch (err) {
 		throw err;
@@ -152,7 +154,7 @@ async function getPostById(postId) {
 	}
 }
 
-async function editPost(postId, newTitle, newContent) {
+async function editPost(postId, newTitle, newContent, newDescription) {
 	try {
 		const post = await prisma.post.findUnique({ where: { id: postId } });
 
@@ -162,8 +164,9 @@ async function editPost(postId, newTitle, newContent) {
 
 		const title = newTitle || post.title;
 		const content = newContent || post.content;
+		const description = newDescription || post.description;
 
-		await prisma.post.update({ where: { id: postId }, data: { title, content } });
+		await prisma.post.update({ where: { id: postId }, data: { title, content, description } });
 	} catch (err) {
 		throw err;
 	}
