@@ -98,7 +98,12 @@ async function userEmailVerified(id, email) {
 
 async function getAllPublishedPosts() {
 	try {
-		const posts = await prisma.post.findMany({ where: { published_at: { not: null } } });
+		const posts = await prisma.post.findMany({
+			where: { published_at: { not: null } },
+			orderBy: {
+				published_at: 'desc',
+			},
+		});
 		return posts;
 	} catch (err) {
 		throw err;
@@ -130,6 +135,48 @@ async function upgradeUserPostPrivilege(userId) {
 	}
 }
 
+async function publishPost(postId) {
+	try {
+		await prisma.post.update({ where: { id: postId }, data: { published_at: new Date() } });
+	} catch (err) {
+		throw err;
+	}
+}
+
+async function getPostById(postId) {
+	try {
+		const post = await prisma.post.findUnique({ where: { id: postId } });
+		return post;
+	} catch (err) {
+		throw err;
+	}
+}
+
+async function editPost(postId, newTitle, newContent) {
+	try {
+		const post = await prisma.post.findUnique({ where: { id: postId } });
+
+		if (!post) {
+			throw new Error('post with that id not found');
+		}
+
+		const title = newTitle || post.title;
+		const content = newContent || post.content;
+
+		await prisma.post.update({ where: { id: postId }, data: { title, content } });
+	} catch (err) {
+		throw err;
+	}
+}
+
+async function deletePost(postId) {
+	try {
+		await prisma.post.delete({ where: { id: postId } });
+	} catch (err) {
+		throw err;
+	}
+}
+
 module.exports = {
 	getUsers,
 	getUserById,
@@ -142,4 +189,8 @@ module.exports = {
 	getAllPublishedPosts,
 	addNewPost,
 	upgradeUserPostPrivilege,
+	getPostById,
+	publishPost,
+	editPost,
+	deletePost,
 };
