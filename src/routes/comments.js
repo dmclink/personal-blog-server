@@ -4,7 +4,7 @@ const router = express.Router();
 const passport = require('../config/passport.js');
 
 const { canComment, checkMissingRequestBody } = require('./middleware.js');
-const { getCommentsForPost, addComment, isPublishedPost, userCanEditComment } = require('../db/queries.js');
+const { getCommentsForPost, addComment, isPublishedPost, userOwnsComment, deleteComment } = require('../db/queries.js');
 
 router.get('/view/:postId', async (req, res) => {
 	try {
@@ -75,13 +75,16 @@ router.post(
 		}
 
 		const content = req.body.content;
-        if (!content) {
-			res.json({ success: false, error: { message: 'must include content field in request with updated comment text' });
+		if (!content) {
+			res.json({
+				success: false,
+				error: { message: 'must include content field in request with updated comment text' },
+			});
 			return;
-        }
+		}
 
 		try {
-			const canEdit = await userCanEditComment(req.user.id, commentId);
+			const canEdit = await userOwnsComment(req.user.id, commentId);
 			if (!canEdit) {
 				res.json({
 					success: false,
@@ -93,7 +96,43 @@ router.post(
 			}
 
 			await editComment(commentId, content);
-            res.json({success: true, message: 'comment updated'})
+			res.json({ success: true, message: 'comment updated' });
+		} catch (err) {
+			next(err);
+		}
+	},
+);
+
+router.post(
+	'/delete',
+	checkMissingRequestBody,
+	passport.authenticate('jwt', { session: false }),
+	canComment,
+	async (req, res, next) => {
+		const commentId = req.body.comment_id;
+		if (!commentId) {
+			res.json({ success: false, error: { message: 'missing comment_id' } });
+			return;
+		}
+		if (isNaN(commentId)) {
+			res.json({ success: false, error: { message: 'comment_id must be a number' } });
+			return;
+		}
+
+		try {
+			const canDelete = await userOwnsComment(req.user.id, commentId);
+			if (!canDelete) {
+				res.json({
+					success: false,
+					error: {
+						message: "you can't delete other people's comments",
+					},
+				});
+				return;
+			}
+
+			await deleteComment(commentId);
+			res.json({ success: true, message: 'comment deleted' });
 		} catch (err) {
 			next(err);
 		}
