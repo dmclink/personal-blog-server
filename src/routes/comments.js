@@ -4,7 +4,7 @@ const router = express.Router();
 const passport = require('../config/passport.js');
 
 const { canComment, checkMissingRequestBody } = require('./middleware.js');
-const { getCommentsForPost, userEmailVerified, addComment, isPublishedPost } = require('../db/queries.js');
+const { getCommentsForPost, addComment, isPublishedPost, userCanEditComment } = require('../db/queries.js');
 
 router.get('/view/:postId', async (req, res) => {
 	try {
@@ -23,9 +23,9 @@ router.get('/view/:postId', async (req, res) => {
 
 router.post(
 	'/create',
+	checkMissingRequestBody,
 	passport.authenticate('jwt', { session: false }),
 	canComment,
-	checkMissingRequestBody,
 	async (req, res, next) => {
 		try {
 			const postId = Number(req.body.post_id);
@@ -55,8 +55,48 @@ router.post(
 		} catch (err) {
 			next(err);
 		}
+	},
+);
 
-		//TODO: implement posting comments on a post, then check get all posts to see if you can see the comments when you grab the post
+router.post(
+	'/edit',
+	checkMissingRequestBody,
+	passport.authenticate('jwt', { session: false }),
+	canComment,
+	async (req, res, next) => {
+		const commentId = req.body.comment_id;
+		if (!commentId) {
+			res.json({ success: false, error: { message: 'missing comment_id' } });
+			return;
+		}
+		if (isNaN(commentId)) {
+			res.json({ success: false, error: { message: 'comment_id must be a number' } });
+			return;
+		}
+
+		const content = req.body.content;
+        if (!content) {
+			res.json({ success: false, error: { message: 'must include content field in request with updated comment text' });
+			return;
+        }
+
+		try {
+			const canEdit = await userCanEditComment(req.user.id, commentId);
+			if (!canEdit) {
+				res.json({
+					success: false,
+					error: {
+						message: "you can't edit other people's comments",
+					},
+				});
+				return;
+			}
+
+			await editComment(commentId, content);
+            res.json({success: true, message: 'comment updated'})
+		} catch (err) {
+			next(err);
+		}
 	},
 );
 

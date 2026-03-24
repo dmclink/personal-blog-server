@@ -240,6 +240,26 @@ async function isPublishedPost(postId) {
 	}
 }
 
+async function userCanEditPost(userId, postId) {
+	try {
+		const post = await prisma.post.findUnique({ where: { id: postId } });
+
+		return post !== null && post.authorId === userId;
+	} catch (err) {
+		throw err;
+	}
+}
+
+async function userCanEditComment(userId, commentId) {
+	try {
+		const comment = await prisma.comment.findUnique({ where: { id: commentId } });
+
+		return comment !== null && comment.authorId === userId;
+	} catch (err) {
+		throw err;
+	}
+}
+
 module.exports = {
 	getUsers,
 	getUserById,
@@ -261,4 +281,6 @@ module.exports = {
 	getCommentsForPost,
 	addComment,
 	isPublishedPost,
+	userCanEditComment,
+	userCanEditPost,
 };

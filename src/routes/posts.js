@@ -13,6 +13,7 @@ const {
 	editPost,
 	deletePost,
 	getUserDrafts,
+	userCanEditPost,
 } = require('../db/queries.js');
 
 router.get('/', async (req, res) => {
@@ -28,9 +29,9 @@ router.get('/', async (req, res) => {
 
 router.post(
 	'/create',
+	checkMissingRequestBody,
 	passport.authenticate('jwt', { session: false }),
 	canPost,
-	checkMissingRequestBody,
 	async (req, res) => {
 		const shouldPublish = req.query.publish;
 		const title = req.body.title;
@@ -64,9 +65,9 @@ router.post(
 
 router.post(
 	'/publish-draft',
+	checkMissingRequestBody,
 	passport.authenticate('jwt', { session: false }),
 	canPost,
-	checkMissingRequestBody,
 	async (req, res) => {
 		try {
 			const postId = req.body.post_id;
@@ -93,9 +94,9 @@ router.post(
 
 router.post(
 	'/edit',
+	checkMissingRequestBody,
 	passport.authenticate('jwt', { session: false }),
 	canPost,
-	checkMissingRequestBody,
 	async (req, res) => {
 		const postId = req.body.post_id;
 		const title = req.body.title;
@@ -118,6 +119,16 @@ router.post(
 		}
 
 		try {
+			const canEdit = await userCanEditPost(req.user.id, postId);
+			if (!canEdit) {
+				res.json({
+					success: false,
+					error: {
+						message: "you can't edit other people's posts",
+					},
+				});
+				return;
+			}
 			await editPost(postId, title, content, description);
 			res.json({ success: true, message: 'post updated' });
 		} catch (err) {
@@ -129,9 +140,9 @@ router.post(
 
 router.post(
 	'/delete',
+	checkMissingRequestBody,
 	passport.authenticate('jwt', { session: false }),
 	canPost,
-	checkMissingRequestBody,
 	async (req, res, next) => {
 		try {
 			const postId = req.body.post_id;
@@ -164,6 +175,10 @@ router.get('/drafts', passport.authenticate('jwt', { session: false }), canPost,
 
 router.get('/view/:id', async (req, res, next) => {
 	const postId = Number(req.params.id);
+
+	if (isNaN(postId)) {
+		res.json({ success: false, error: { message: 'post id url parameter must be a number', postId } });
+	}
 
 	try {
 		const post = await getPublishedPostById(postId);
