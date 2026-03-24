@@ -13,7 +13,7 @@ const {
 	editPost,
 	deletePost,
 	getUserDrafts,
-	userCanEditPost,
+	userOwnsPost,
 } = require('../db/queries.js');
 
 router.get('/', async (req, res) => {
@@ -119,7 +119,7 @@ router.post(
 		}
 
 		try {
-			const canEdit = await userCanEditPost(req.user.id, postId);
+			const canEdit = await userOwnsPost(req.user.id, postId);
 			if (!canEdit) {
 				res.json({
 					success: false,
@@ -148,6 +148,16 @@ router.post(
 			const postId = req.body.post_id;
 			if (!postId) {
 				res.json({ success: false, error: { message: 'missing post_id field in request body' } });
+				return;
+			}
+			const canDelete = await userOwnsPost(req.user.id, postId);
+			if (!canDelete) {
+				res.json({
+					success: false,
+					error: {
+						message: "you can't delete other people's posts",
+					},
+				});
 				return;
 			}
 
