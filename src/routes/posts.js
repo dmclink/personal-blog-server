@@ -2,18 +2,20 @@ const express = require('express');
 const router = express.Router();
 const passport = require('../config/passport.js');
 
+const { canPost, checkMissingRequestBody } = require('./middleware.js');
 const {
 	getAllPublishedPosts,
 	addNewPost,
 	upgradeUserPostPrivilege,
 	getPostById,
+	getPublishedPostById,
 	publishPost,
 	editPost,
 	deletePost,
 	getUserDrafts,
 } = require('../db/queries.js');
 
-router.get('/', passport.authenticate('jwt', { session: false }), async (req, res) => {
+router.get('/', async (req, res) => {
 	try {
 		const posts = await getAllPublishedPosts();
 
@@ -23,28 +25,6 @@ router.get('/', passport.authenticate('jwt', { session: false }), async (req, re
 		throw err;
 	}
 });
-
-async function canPost(req, res, next) {
-	const user = req.user;
-
-	if (!user.can_post) {
-		next(new Error('user does not have post privileges. can only view'));
-	}
-	if (!user.email_verified) {
-		next(new Error("user hasn't verified email yet, follow verification process!"));
-	}
-
-	next();
-}
-
-function checkMissingRequestBody(req, res, next) {
-	if (!req.body) {
-		res.json({ success: false, error: { message: 'missing request body' } });
-		return;
-	}
-
-	next();
-}
 
 router.post(
 	'/create',
@@ -179,6 +159,24 @@ router.get('/drafts', passport.authenticate('jwt', { session: false }), canPost,
 	} catch (err) {
 		console.error(err);
 		next(new Error('something went wrong getting user drafts'));
+	}
+});
+
+router.get('/view/:id', async (req, res, next) => {
+	const postId = Number(req.params.id);
+
+	try {
+		const post = await getPublishedPostById(postId);
+
+		if (!post) {
+			res.json({ success: false, error: { message: 'no published post with id:', postId } });
+			return;
+		}
+
+		res.json({ success: true, data: { post } });
+	} catch (err) {
+		console.error(err);
+		next(new Error('something went wrong fetching post'));
 	}
 });
 

@@ -103,6 +103,9 @@ async function getAllPublishedPosts() {
 			orderBy: {
 				published_at: 'desc',
 			},
+			include: {
+				comments: true,
+			},
 		});
 		return posts;
 	} catch (err) {
@@ -147,7 +150,22 @@ async function publishPost(postId) {
 
 async function getPostById(postId) {
 	try {
-		const post = await prisma.post.findUnique({ where: { id: postId } });
+		const post = await prisma.post.findUnique({
+			where: { id: postId },
+			include: { comments: true },
+		});
+		return post;
+	} catch (err) {
+		throw err;
+	}
+}
+
+async function getPublishedPostById(postId) {
+	try {
+		const post = await prisma.post.findUnique({
+			where: { id: postId, published_at: { not: null } },
+			include: { comments: true },
+		});
 		return post;
 	} catch (err) {
 		throw err;
@@ -189,6 +207,39 @@ async function getUserDrafts(userId) {
 	}
 }
 
+async function getCommentsForPost(postId) {
+	try {
+		const comments = await prisma.comment.findMany({ where: { postId } });
+		return comments;
+	} catch (err) {
+		throw err;
+	}
+}
+
+async function addComment(authorId, postId, content) {
+	try {
+		const comment = await prisma.comment.create({
+			data: {
+				content,
+				author: { connect: { id: authorId } },
+				post: { connect: { id: postId } },
+			},
+		});
+		console.log('new comment added:', comment);
+	} catch (err) {
+		throw err;
+	}
+}
+
+async function isPublishedPost(postId) {
+	try {
+		const post = await prisma.post.findUnique({ where: { id: postId, published_at: { not: null } } });
+		return post !== null;
+	} catch (err) {
+		throw err;
+	}
+}
+
 module.exports = {
 	getUsers,
 	getUserById,
@@ -202,8 +253,12 @@ module.exports = {
 	addNewPost,
 	upgradeUserPostPrivilege,
 	getPostById,
+	getPublishedPostById,
 	publishPost,
 	editPost,
 	deletePost,
 	getUserDrafts,
+	getCommentsForPost,
+	addComment,
+	isPublishedPost,
 };

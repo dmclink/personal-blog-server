@@ -25,7 +25,7 @@ router.post('/login', async (req, res) => {
 
 		const verified = await verifyPassword(user.id, password);
 		if (!verified) {
-			throw new Error('incorrect password:', password);
+			throw new Error('incorrect password');
 		}
 
 		const token = buildUserAuthToken(user);
