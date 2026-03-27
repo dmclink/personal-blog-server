@@ -39,7 +39,7 @@ router.post(
 		const description = req.body.description;
 		const authorId = req.user.id;
 
-		if (!title || !content) {
+		if (typeof title === 'undefined' || !content) {
 			res.json({ success: false, error: { message: 'missing title or content from new post' } });
 			return;
 		}

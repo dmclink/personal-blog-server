@@ -78,7 +78,7 @@ async function addUser(email, username, password) {
 		});
 
 		return user;
-	} catch (error) {
+	} catch (err) {
 		throw err;
 	}
 }
@@ -152,8 +152,9 @@ async function getPostById(postId) {
 	try {
 		const post = await prisma.post.findUnique({
 			where: { id: postId },
-			include: { comments: true },
+			include: { comments: { include: { author: { select: { username: true } } } } },
 		});
+
 		return post;
 	} catch (err) {
 		throw err;
@@ -164,8 +165,9 @@ async function getPublishedPostById(postId) {
 	try {
 		const post = await prisma.post.findUnique({
 			where: { id: postId, published_at: { not: null } },
-			include: { comments: true },
+			include: { comments: { include: { author: { select: { username: true } } } } },
 		});
+
 		return post;
 	} catch (err) {
 		throw err;

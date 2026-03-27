@@ -59,7 +59,7 @@ router.post('/register', async (req, res) => {
 		return;
 	}
 
-	if (await emailExists(username)) {
+	if (await emailExists(email)) {
 		res.json({ success: false, error: { message: 'that email already exists, pick another one\n' } });
 		return;
 	}
