@@ -52,6 +52,7 @@ function buildUserAuthToken(user) {
 	const payload = {
 		sub: user.id,
 		email_verified: user.email_verified,
+		email_sent_at: !user.email_verified ? user.email_sent_at : undefined,
 		can_post: user.can_post,
 		admin: user.admin,
 		iss: 'https://www.github.com/dmclink/personal-blog-server',

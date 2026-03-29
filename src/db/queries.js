@@ -270,6 +270,14 @@ async function deleteComment(commentId) {
 	}
 }
 
+async function updateEmailSentTime(userId) {
+	try {
+		await prisma.user.update({ where: { id: userId }, data: { email_sent_at: new Date() } });
+	} catch (err) {
+		throw err;
+	}
+}
+
 module.exports = {
 	getUsers,
 	getUserById,
@@ -294,4 +302,5 @@ module.exports = {
 	userOwnsComment,
 	userOwnsPost,
 	deleteComment,
+	updateEmailSentTime,
 };

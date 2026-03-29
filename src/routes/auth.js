@@ -5,7 +5,14 @@ const router = express.Router();
 const passport = require('../config/passport.js');
 const nodemailer = require('../config/nodemailer.js');
 
-const { addUser, emailExists, usernameExists, userEmailVerified, getUserByUsername } = require('../db/queries.js');
+const {
+	addUser,
+	emailExists,
+	usernameExists,
+	userEmailVerified,
+	getUserByUsername,
+	updateEmailSentTime,
+} = require('../db/queries.js');
 const { verifyPassword, buildUserAuthToken } = require('../lib/authutils.js');
 
 router.post('/login', async (req, res) => {
@@ -79,39 +86,63 @@ router.get('/verify-email', passport.authenticate('jwt', { session: false }), (r
 	const userEmail = user.email;
 	const userId = user.id;
 
-	const payload = {
+	const lastEmailSentAt = Date.parse(user.email_sent_at);
+	const emailSendCooldown = 1000 * 60 * 15; // 15 minutes
+
+	// prevent users spamming verification emails
+	if (new Date() < new Date(lastEmailSentAt + emailSendCooldown)) {
+		const err = new Error('verification email still on cooldown: ', userId);
+		console.error(err);
+		res.json({
+			success: false,
+			error: {
+				message:
+					'verification email already sent, please check your inbox or wait at least 15 minutes to send again',
+			},
+		});
+		return;
+	}
+
+	const tokenPayload = {
 		user_id: userId,
 		email: userEmail,
 		iss: 'https://www.github.com/dmclink/personal-blog-server',
 		aud: 'personal-blog-user',
 	};
 
-	const token = jwt.sign(payload, process.env.PERSONAL_BLOG_JWT_SECRET_KEY, {
+	const token = jwt.sign(tokenPayload, process.env.PERSONAL_BLOG_JWT_SECRET_KEY, {
 		expiresIn: '15m',
 	});
 
 	const link = `${process.env.HOST}:${process.env.PORT}/api/auth/confirm-email?token=${token}`;
 	nodemailer.sendMail(
 		{
-			from: `"Personal Blog Email Verification" <${process.env.NODEMAILER_OUTLOOK_USER}>`,
+			from: `"Personal Blog Email Verification" <${process.env.NODEMAILER_GMAIL_USER}>`,
 			to: userEmail,
-			subject: 'Verify your email for the Personal Blog webpage - by dmclink',
+			subject: "Verify your email for dmclink's personal blog page",
 			html: `
 				<h1>Verify your email</h1>
 				<p>click the link below to confirm</p>
 				<p>link expires in 15 minutes<p>
-				<a href="${link}">${link}</a>
+				<p><a href="${link}">${link}</a></p>
 			`,
 		},
-		(err, info) => {
+		async (err, info) => {
 			if (err) {
-				return console.error(err);
+				console.error(err);
+				return err;
 			}
 			console.log('message sent, info:', info);
 
-			res.json({ success: true, message: 'verification email sent. check your spam folder' });
+			try {
+				await updateEmailSentTime(userId);
+			} catch (err) {
+				console.error(err);
+				return err;
+			}
 		},
 	);
+	res.json({ success: true, message: 'verification email sent. check your spam folder' });
 });
 
 router.get('/confirm-email', async (req, res) => {
