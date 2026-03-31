@@ -39,8 +39,8 @@ router.post(
 		const description = req.body.description;
 		const authorId = req.user.id;
 
-		if (typeof title === 'undefined' || !content) {
-			res.json({ success: false, error: { message: 'missing title or content from new post' } });
+		if (typeof title === 'undefined' || typeof description === 'undefined' || !content) {
+			res.json({ success: false, error: { message: 'body content must not be empty' } });
 			return;
 		}
 
@@ -59,7 +59,7 @@ router.post(
 
 		console.log('new post created:', newPost);
 
-		res.json({ success: true, message: 'new post created' });
+		res.json({ success: true, message: 'new post created', post: newPost });
 	},
 );
 
