@@ -2,8 +2,6 @@ const express = require('express');
 const { prisma } = require('../prisma_lib/prisma.js');
 const { hashPassword } = require('./lib/authutils.js');
 
-const { Prisma } = require('@prisma/client');
-
 const apiRouter = require('./routes/api.js');
 
 const app = express();

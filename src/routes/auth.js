@@ -48,7 +48,7 @@ router.post('/login', async (req, res) => {
 });
 
 router.get('/protected', passport.authenticate('jwt', { session: false }), (req, res) => {
-	res.send({ success: true, message: "cool, you're authenticated, nice\n" });
+	res.json({ success: true, message: "cool, you're authenticated, nice\n" });
 });
 
 router.post('/register', async (req, res) => {
@@ -114,7 +114,7 @@ router.get('/verify-email', passport.authenticate('jwt', { session: false }), (r
 		expiresIn: '15m',
 	});
 
-	const link = `${process.env.HOST}:${process.env.PORT}/api/auth/confirm-email?token=${token}`;
+	const link = `${process.env.HOST}:${process.env.PORT || 3000}/api/auth/confirm-email?token=${token}`;
 	nodemailer.sendMail(
 		{
 			from: `"Personal Blog Email Verification" <${process.env.NODEMAILER_GMAIL_USER}>`,
