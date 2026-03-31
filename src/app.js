@@ -30,4 +30,4 @@ app.use((error, req, res, next) => {
 
 const PORT = process.env.PORT || 3000;
 console.log('listening on port: ', PORT);
-app.listen(PORT);
+app.listen(PORT, '0.0.0.0');
