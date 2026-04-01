@@ -1,6 +1,7 @@
 const { prisma } = require('../../prisma_lib/prisma.js');
 
 const { hashPassword } = require('../lib/authutils.js');
+const { randomDefaultPfpUrl } = require('../lib/stringutils.js');
 
 async function getUsers() {
 	try {
@@ -57,11 +58,6 @@ async function emailExists(email) {
 	} catch (err) {
 		throw err;
 	}
-}
-
-function randomDefaultPfpUrl() {
-	const num = Math.round(Math.random() * 4);
-	return `default_pfp${num}`;
 }
 
 async function addUser(email, username, password) {

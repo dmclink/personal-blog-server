@@ -3,6 +3,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../generated/prisma/client.js';
 import 'dotenv/config';
 import { hashPassword } from '../src/lib/authutils.js';
+import { randomDefaultPfpUrl } from '../src/lib/stringutils.js';
 
 const connectionString = `${process.env.DATABASE_URL}`;
 const pool = new Pool({ connectionString });
@@ -26,6 +27,7 @@ const main = async () => {
 					can_post: true,
 					email_verified: true,
 					admin: true,
+					pfp_url: randomDefaultPfpUrl(),
 				},
 			});
 			console.log('user created:', user);
