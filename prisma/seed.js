@@ -13,7 +13,7 @@ const prisma = new PrismaClient({ adapter });
 console.log('seeding database with admin user');
 const main = async () => {
 	if (process.env.SEED_USERNAME && process.env.SEED_PASSWORD && process.env.SEED_EMAIL) {
-		conole.log(`user:${process.env.SEED_USERNAME}`);
+		console.log(`user:${process.env.SEED_USERNAME}`);
 		try {
 			const pass = await hashPassword(process.env.SEED_PASSWORD);
 			const user = prisma.user.upsert({
