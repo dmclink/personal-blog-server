@@ -1,6 +1,7 @@
 const express = require('express');
 const { prisma } = require('../prisma_lib/prisma.js');
 const { hashPassword } = require('./lib/authutils.js');
+const cors = require('cors');
 
 const apiRouter = require('./routes/api.js');
 
@@ -8,6 +9,14 @@ const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded());
+
+const allowedOrigins = process.env.FRONTEND_URLS ? process.env.FRONTEND_URLS.split(',').map((o) => o.trim()) : [];
+app.use(
+	cors({
+		origin: allowedOrigins,
+		credentials: true,
+	}),
+);
 
 app.use('/api', apiRouter);
 
