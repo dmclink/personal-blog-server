@@ -10,11 +10,13 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 // for seeding admin user with post perms
+console.log('seeding database with admin user');
 const main = async () => {
 	if (process.env.SEED_USERNAME && process.env.SEED_PASSWORD && process.env.SEED_EMAIL) {
+		conole.log(`user:${process.env.SEED_USERNAME}`);
 		try {
 			const pass = await hashPassword(process.env.SEED_PASSWORD);
-			prisma.user.upsert({
+			const user = prisma.user.upsert({
 				where: { email: process.env.SEED_EMAIL },
 				update: {},
 				create: {
@@ -26,6 +28,7 @@ const main = async () => {
 					admin: true,
 				},
 			});
+			console.log('user created:', user);
 		} catch (err) {
 			if (err.code && err.code === 'P2002') {
 				console.log('admin already seeded');
