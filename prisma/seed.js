@@ -16,7 +16,7 @@ const main = async () => {
 		console.log(`user:${process.env.SEED_USERNAME}`);
 		try {
 			const pass = await hashPassword(process.env.SEED_PASSWORD);
-			const user = prisma.user.upsert({
+			const user = await prisma.user.upsert({
 				where: { email: process.env.SEED_EMAIL },
 				update: {},
 				create: {
