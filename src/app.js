@@ -40,4 +40,5 @@ app.use((error, req, res, next) => {
 const port = process.env.PORT || 3000;
 const host = process.env.HOST || '0.0.0.0';
 console.log('listening on port: ', port);
+console.log('open to origins:', allowedOrigins);
 app.listen(port, host);
