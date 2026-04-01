@@ -1,10 +1,7 @@
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../generated/prisma/client.js';
-import pkg from '@prisma/client';
 import 'dotenv/config';
-
-const { Prisma } = pkg;
 
 const connectionString = `${process.env.DATABASE_URL}`;
 const pool = new Pool({ connectionString });
@@ -29,7 +26,7 @@ const main = async () => {
 				},
 			});
 		} catch (err) {
-			if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+			if (err.code && err.code === 'P2002') {
 				console.log('admin already seeded');
 			} else {
 				console.error(err);
